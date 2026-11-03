@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from .cleanup import ctx_name
 from .config import CONFIG, HOME, TICKET_RE
 from .util import run
 
@@ -32,7 +33,7 @@ def ticket_text(pr: dict) -> str:
 
 
 def write_ctx(key: str, files: dict[str, str]) -> Path:
-    ctx = HOME / "ctx" / key.replace("/", "-").replace("#", "-")
+    ctx = HOME / "ctx" / ctx_name(key)
     shutil.rmtree(ctx, ignore_errors=True)
     ctx.mkdir(parents=True)
     for name, content in files.items():
