@@ -9,7 +9,8 @@ repos = [
   "geekeeasia/value-chain-v2", 
   "geekeeasia/value-chain-api-v2",
   "geekeeasia/value-chain-api",
-  "geekeeasia/value-chain"
+  "geekeeasia/value-chain",
+  "geekeeasia/costs"
 ]
 
 # Review rubric, read fresh on every run so edits to the prompts take effect.
@@ -25,4 +26,5 @@ claude_timeout_s = 1800
 max_prs_per_run = 3
 max_rounds = 3             # past this the job stops acting on the PR and notifies
 max_changed_lines = 1500   # bigger PRs are reviewed, never approved
+retention_days = 30        # drafts/ and logs/*.log older than this are deleted each run
 review_prefix = "🤖 AI-assisted review"

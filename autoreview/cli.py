@@ -6,6 +6,7 @@ import argparse
 import datetime as dt
 
 from . import config, github
+from .cleanup import prune
 from .config import CONFIG, MARKER_RE, PAUSE_FILE
 from .passes import recheck_pass, review_pass
 from .state import acquire_lock, load_state, release_lock, save_state
@@ -66,6 +67,10 @@ def main() -> int:
         config.ME = github.my_login()
         state = load_state()
         keys = [opts.pr] if opts.pr else github.candidates()
+        try:
+            prune(None if opts.pr else keys)
+        except Exception as exc:  # housekeeping must never block reviews
+            log(f"cleanup failed: {exc}")
         done = 0
         for key in keys:
             if done >= CONFIG["max_prs_per_run"]:
