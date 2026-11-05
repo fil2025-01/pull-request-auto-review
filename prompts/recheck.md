@@ -14,6 +14,6 @@ For every thread in `threads.json`, decide one verdict, and check it against the
 - `not_addressed`: the problem is still there, or the fix doesn't cover the failure scenario. Say what is still missing.
 - `needs_human`: the author's argument is a matter of judgement or product choice, or you can't verify it. Say what I should decide.
 
-Write each `reply` as one to three plain sentences that will be posted in that thread.
+Write each `reply` as one to three short sentences in everyday English that will be posted in that thread. Use common words, and explain any technical term in a few plain words. Write the summary and any new findings the same way.
 
 Then review only `compare.patch` for new problems the changes introduced, using `rubric.md`. Put them in `new_findings`, with `path` and `line` pointing at the new head. Don't re-raise anything already covered by a thread, and don't review code outside `compare.patch`.
