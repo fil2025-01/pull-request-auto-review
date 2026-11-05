@@ -10,7 +10,8 @@ repos = [
   "geekeeasia/value-chain-api-v2",
   "geekeeasia/value-chain-api",
   "geekeeasia/value-chain",
-  "geekeeasia/costs"
+  "geekeeasia/costs",
+  "geekeeasia/dating-backend"
 ]
 
 # Review rubric, read fresh on every run so edits to the prompts take effect.
