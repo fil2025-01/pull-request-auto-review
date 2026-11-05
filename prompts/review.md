@@ -15,7 +15,13 @@ Review the PR the way `rubric.md` describes:
 Read the surrounding code before reporting anything. Report only problems you have checked against the code, each with a concrete failure scenario. For each finding:
 - `path` and `line` must point at a line of the PR head version of the file, preferably a line the diff adds or changes.
 - Set `pre_existing` to true when the problem was already there before this PR and the PR only extends it, and say so in the body.
-- `body` is the comment as it will be posted: plain English, the defect, the failure scenario, and the suggested fix. No severity tag; that's added for you.
+- `title` is a short plain-words headline. `body` is the comment as it will be posted: what is wrong, a concrete example of when it breaks, and how to fix it. No severity tag; that's added for you.
 - Use `must-fix` for bugs and broken acceptance criteria, `should-fix` for checklist violations (duplication, wrong checks, missing tests), and `minor` for the rest.
+
+Write everything (summary, ticket coverage, before-release steps, finding titles and bodies) in everyday English, for a reader who knows the product but not this code:
+- Short sentences and common words. Say "logs the user out", not "invalidates the session".
+- When a technical term is needed, explain it in a few plain words the first time, e.g. "a server-managed cookie (HttpOnly)".
+- Keep file names, function names and settings in backticks where they help someone find the spot, but don't let them carry the meaning.
+- Fill `ticket_coverage` with one item per acceptance criterion and put deploy or coordination steps in `before_release`.
 
 If you find nothing worth reporting, return an empty `findings` list. Don't pad it.

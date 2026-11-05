@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 
 from . import config
@@ -24,8 +23,15 @@ def gh_api(path: str, *, method: str = "GET", body: dict | None = None, paginate
         args += ["--input", "-"]
     out = run(["gh", *args], input=json.dumps(body) if body is not None else None)
     if paginate and out.strip().startswith("["):
-        # --paginate prints one JSON array per page back to back.
-        return [item for page in re.split(r"(?<=\])\s*(?=\[)", out.strip()) for item in json.loads(page)]
+        # --paginate prints one JSON array per page back to back. Decode them one at a time:
+        # splitting the text on "][" breaks when a review body contains e.g. "[MULTIPART] [VCP-1]".
+        decoder, items, pos, text = json.JSONDecoder(), [], 0, out.strip()
+        while pos < len(text):
+            page, pos = decoder.raw_decode(text, pos)
+            items += page
+            while pos < len(text) and text[pos].isspace():
+                pos += 1
+        return items
     return json.loads(out) if out.strip() else None
 
 

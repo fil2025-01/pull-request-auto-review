@@ -1,24 +1,93 @@
 {
   "type": "object",
-  "required": ["summary", "ticket_coverage", "findings"],
+  "required": [
+    "summary",
+    "ticket_coverage",
+    "before_release",
+    "findings"
+  ],
   "properties": {
-    "summary": { "type": "string", "description": "Two to four sentences: what the PR does and the overall verdict." },
-    "ticket_coverage": { "type": "string", "description": "Which acceptance criteria are met, and anything in the ticket the PR does not cover." },
+    "summary": {
+      "type": "string",
+      "description": "Everyday English for someone who doesn't know the code. Shape: one short paragraph saying what the PR changes and why it matters (explain any technical term in a few plain words, e.g. 'saved in the browser (localStorage)'); then 'It also does a few other things:' and a short markdown bullet list, if there are other changes; then one or two sentences with the overall verdict, ending with the problems that need fixing as a numbered list (one plain sentence each), if there are any."
+    },
+    "ticket_coverage": {
+      "type": "array",
+      "description": "One item per acceptance criterion in the ticket, in ticket order. Empty if the ticket couldn't be loaded.",
+      "items": {
+        "type": "object",
+        "required": [
+          "requirement",
+          "status",
+          "note"
+        ],
+        "properties": {
+          "requirement": {
+            "type": "string",
+            "description": "The criterion's number and a plain-words description, e.g. 'Requirement 1 (store login info securely on the server)'."
+          },
+          "status": {
+            "type": "string",
+            "description": "Two or three words, e.g. 'Done', 'Mostly done', 'Not done yet', 'Probably fine', 'Can't check here'."
+          },
+          "note": {
+            "type": "string",
+            "description": "One to three short everyday-English sentences: what shows it, or what is missing. Point at a finding by its number in the summary list when it is the reason."
+          }
+        }
+      }
+    },
     "findings": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "path", "line", "severity", "pre_existing", "title", "body"],
+        "required": [
+          "id",
+          "path",
+          "line",
+          "severity",
+          "pre_existing",
+          "title",
+          "body"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "path": { "type": "string", "description": "Repo-relative path in the PR head." },
-          "line": { "type": "integer", "description": "Line number in the PR head version of the file (RIGHT side)." },
-          "severity": { "type": "string", "enum": ["must-fix", "should-fix", "minor"] },
-          "pre_existing": { "type": "boolean", "description": "True when the problem existed before this PR and the PR only extends it." },
-          "title": { "type": "string" },
-          "body": { "type": "string", "description": "The comment as it will be posted: the defect, a concrete failure scenario, and the suggested fix." }
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "description": "Repo-relative path in the PR head."
+          },
+          "line": {
+            "type": "integer",
+            "description": "Line number in the PR head version of the file (RIGHT side)."
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "must-fix",
+              "should-fix",
+              "minor"
+            ]
+          },
+          "pre_existing": {
+            "type": "boolean",
+            "description": "True when the problem existed before this PR and the PR only extends it."
+          },
+          "title": {
+            "type": "string",
+            "description": "A short plain-words headline, e.g. 'Users can stay logged in after the inactivity timeout'."
+          },
+          "body": {
+            "type": "string",
+            "description": "The comment as it will be posted, in everyday English: what is wrong, a concrete example of when it breaks, and how to fix it."
+          }
         }
       }
+    },
+    "before_release": {
+      "type": "string",
+      "description": "Everyday English: steps outside the code that must happen before release (deploys, settings, other teams). Empty string if none."
     }
   }
 }
