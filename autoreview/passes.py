@@ -13,6 +13,12 @@ from .util import log, notify
 from .workspace import checkout, drop_checkout, rubric, ticket_text, write_ctx
 
 
+def checks_note() -> str:
+    if CONFIG.get("wait_for_checks", True):
+        return ", and all the checks pass."
+    return ". Approved without waiting for the checks (tests) to finish."
+
+
 def review_pass(key: str, pr: dict, entry: dict) -> None:
     repo, number = key.split("#")
     diff = github.pr_diff(repo, number)
@@ -38,7 +44,7 @@ def review_pass(key: str, pr: dict, entry: dict) -> None:
     else:
         verdict, reasons = gates(repo, pr, threads_blocked=False)
         if verdict == "pass":
-            draft["approve"] = approval(pr, round_no, summary + "\n\nNo problems found, and all the checks pass.")
+            draft["approve"] = approval(pr, round_no, summary + "\n\nNo problems found" + checks_note())
         else:
             draft["review"] = review_payload(pr, round_no, summary, [], [], f"No problems found. Not approving yet because of: {', '.join(reasons)}.")
     apply(key, pr, draft)
@@ -96,7 +102,7 @@ def recheck_pass(key: str, pr: dict, entry: dict, last_sha: str, threads: list[d
         verdict, reasons = "block", reasons + [f"{len(blocking_new)} new finding(s)"]
 
     if verdict == "pass":
-        draft["approve"] = approval(pr, round_no, f"{out['summary']}\n\nEvery review thread is addressed and the checks pass.")
+        draft["approve"] = approval(pr, round_no, f"{out['summary']}\n\nEvery comment has been handled" + checks_note())
         if out["new_findings"]:
             draft["review"] = review_payload(pr, round_no, "A few small notes on the latest changes. None of them block this PR:", *split_findings(out["new_findings"], diff))
     elif verdict == "wait" and not out["new_findings"]:

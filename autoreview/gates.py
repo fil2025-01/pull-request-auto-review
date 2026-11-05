@@ -22,11 +22,12 @@ def gates(repo: str, pr: dict, threads_blocked: bool) -> tuple[str, list[str]]:
         reasons.append("merge conflicts")
     elif pr["mergeable"] == "UNKNOWN":
         waiting = True
-    checks = checks_state(repo, pr["number"])
-    if checks == "fail":
-        reasons.append("failing checks")
-    elif checks in ("pending", "unknown"):
-        waiting = True
+    if CONFIG.get("wait_for_checks", True):
+        checks = checks_state(repo, pr["number"])
+        if checks == "fail":
+            reasons.append("failing checks")
+        elif checks in ("pending", "unknown"):
+            waiting = True
     if reasons:
         return "block", reasons
-    return ("wait", ["checks or mergeability pending"]) if waiting else ("pass", [])
+    return ("wait", ["checks or mergeability pending" if CONFIG.get("wait_for_checks", True) else "mergeability pending"]) if waiting else ("pass", [])
