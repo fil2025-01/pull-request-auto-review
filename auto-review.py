@@ -8,6 +8,7 @@ The code lives in the autoreview/ package; this file is the entry point run.sh a
 
     auto-review.py                 one cycle (what launchd runs)
     auto-review.py --pr OWNER/REPO#N [--force]   one PR, ignoring the search and (with --force) the state
+    auto-review.py status [--all]  read-only overview: what's being reviewed, approved, waiting
 """
 
 import sys

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import sys
 
 from . import config, github
 from .cleanup import prune
@@ -31,7 +32,7 @@ def process(key: str, state: dict, force: bool) -> bool:
     if not force and entry.get("signature") == sig and not entry.get("pending_approval"):
         return False
 
-    entry.pop("pending_approval", None)
+    pending = entry.pop("pending_approval", None)
     if not reviews:
         log(f"{key}: REVIEW at {pr['headRefOid'][:8]}")
         review_pass(key, pr, entry)
@@ -43,6 +44,11 @@ def process(key: str, state: dict, force: bool) -> bool:
         if not threads and last_sha == pr["headRefOid"] and last["state"] == "APPROVED":
             entry["signature"] = sig
             return False
+        # No new code, no author reply, no new review request: nothing to look at, so don't run Claude.
+        author_replied = any((t["comments"]["nodes"][-1]["author"] or {}).get("login") != config.ME for t in threads)
+        if last_sha == pr["headRefOid"] and not author_replied and not requested and not pending:
+            entry["signature"] = sig
+            return False
         log(f"{key}: RECHECK {last_sha[:8]} → {pr['headRefOid'][:8]}, {len(threads)} open thread(s)")
         recheck_pass(key, pr, entry, last_sha, threads)
     entry["signature"] = sig
@@ -51,6 +57,9 @@ def process(key: str, state: dict, force: bool) -> bool:
 
 
 def main() -> int:
+    if sys.argv[1:2] == ["status"]:
+        from .report import main as report
+        return report()
     parser = argparse.ArgumentParser()
     parser.add_argument("--pr", help="OWNER/REPO#N: process just this PR")
     parser.add_argument("--force", action="store_true", help="ignore the saved state for --pr")
