@@ -89,7 +89,9 @@ Not in git (see `.gitignore`):
 
 ## Setup
 
-Requirements: `python3` 3.11+, `gh` (logged in), `claude`, `jira` CLI, `git`.
+Requirements: `python3` 3.11+, `gh` (logged in), `claude`, `jira` CLI, `git`, and optionally `terminal-notifier`.
+
+Clickable alerts: `brew install terminal-notifier`, then allow it in System Settings → Notifications → terminal-notifier (set the style to Alerts or Banners). With it, clicking an alert opens the PR, and a newer alert about the same PR replaces the older one. Without it (or before notifications are allowed), alerts fall back to `osascript` and clicking them does nothing useful.
 
 ```sh
 # Secrets for the Jira CLI
