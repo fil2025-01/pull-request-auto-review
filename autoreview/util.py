@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -26,7 +28,20 @@ def run(args: list[str], *, cwd: Path | None = None, input: str | None = None, t
     return proc.stdout
 
 
+PR_KEY_RE = re.compile(r"\b([\w.-]+/[\w.-]+)#(\d+)\b")
+
+
 def notify(title: str, message: str) -> None:
+    """macOS notification. With terminal-notifier installed, clicking it opens the PR named in the message,
+    and a newer alert about the same PR replaces the older one instead of stacking."""
     log(f"NOTIFY {title}: {message}")
-    script = f"display notification {json.dumps(message)} with title {json.dumps('Auto-review: ' + title)}"
+    full_title = "Auto-review: " + title
+    notifier = shutil.which("terminal-notifier") or "/opt/homebrew/bin/terminal-notifier"
+    if Path(notifier).exists():
+        args = [notifier, "-title", full_title, "-message", message]
+        if m := PR_KEY_RE.search(message):
+            args += ["-open", f"https://github.com/{m[1]}/pull/{m[2]}", "-group", f"auto-review:{m[1]}#{m[2]}"]
+        if subprocess.run(args, capture_output=True).returncode == 0:
+            return
+    script = f"display notification {json.dumps(message)} with title {json.dumps(full_title)}"
     subprocess.run(["osascript", "-e", script], capture_output=True)
