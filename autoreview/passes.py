@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from . import claude, github
+from . import claude, config, github
 from .config import BLOCKING, CONFIG, SETTLED
 from .gates import gates
 from .payloads import approval, reply_body, review_payload, review_summary, split_findings
@@ -59,10 +59,14 @@ def recheck_pass(key: str, pr: dict, entry: dict, last_sha: str, threads: list[d
         return
 
     keyed = {f"T{i + 1}": t for i, t in enumerate(threads)}
+    # A thread gets a reply only when the author had the last word in it.
+    author_replied = {k: (t["comments"]["nodes"][-1]["author"] or {}).get("login") != config.ME for k, t in keyed.items()}
+    rerequested = any((r.get("login") or "") == config.ME for r in pr.get("reviewRequests", []))
     threads_doc = {
         k: {
             "path": t["path"], "line": t["line"] or t["originalLine"], "outdated": t["isOutdated"],
             "resolved_by_author": t["isResolved"],
+            "author_replied": author_replied[k],
             "comments": [{"author": (c["author"] or {}).get("login"), "at": c["createdAt"], "body": c["body"]} for c in t["comments"]["nodes"]],
         }
         for k, t in keyed.items()
@@ -88,7 +92,8 @@ def recheck_pass(key: str, pr: dict, entry: dict, last_sha: str, threads: list[d
     draft: dict = {"action": "recheck", "verdicts": out["threads"], "replies": [], "resolve": [], "unresolve": []}
     for k, v in verdicts.items():
         thread = keyed[k]
-        draft["replies"].append({"comment_id": thread["comments"]["nodes"][0]["databaseId"], "body": reply_body(v["verdict"], v["reply"])})
+        if author_replied[k] and v["reply"].strip():
+            draft["replies"].append({"comment_id": thread["comments"]["nodes"][0]["databaseId"], "body": reply_body(v["verdict"], v["reply"])})
         if v["verdict"] in SETTLED and not thread["isResolved"]:
             draft["resolve"].append(thread["id"])
         elif v["verdict"] not in SETTLED and thread["isResolved"]:
@@ -108,9 +113,12 @@ def recheck_pass(key: str, pr: dict, entry: dict, last_sha: str, threads: list[d
     elif verdict == "wait" and not out["new_findings"]:
         log(f"{key}: threads settled, waiting on {', '.join(reasons)}")
         entry["pending_approval"] = True
-    else:
+    elif rerequested:
+        # The author asked for another look: say where things stand.
         still = f"Still waiting on: {', '.join(reasons)}." if reasons else ""
         draft["review"] = review_payload(pr, round_no, out["summary"], *split_findings(out["new_findings"], diff), extra=still)
+    elif out["new_findings"]:
+        draft["review"] = review_payload(pr, round_no, "I found some new problems in the latest changes:", *split_findings(out["new_findings"], diff))
     if human:
         notify("needs you", f"{key}: {len(human)} thread(s) need your call")
     apply(key, pr, draft)

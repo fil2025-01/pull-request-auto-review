@@ -32,7 +32,7 @@ def process(key: str, state: dict, force: bool) -> bool:
     if not force and entry.get("signature") == sig and not entry.get("pending_approval"):
         return False
 
-    entry.pop("pending_approval", None)
+    pending = entry.pop("pending_approval", None)
     if not reviews:
         log(f"{key}: REVIEW at {pr['headRefOid'][:8]}")
         review_pass(key, pr, entry)
@@ -42,6 +42,11 @@ def process(key: str, state: dict, force: bool) -> bool:
         entry.setdefault("round", int(marker.group(2)) if marker else 1)
         last_sha = last["commit_id"]
         if not threads and last_sha == pr["headRefOid"] and last["state"] == "APPROVED":
+            entry["signature"] = sig
+            return False
+        # No new code, no author reply, no new review request: nothing to look at, so don't run Claude.
+        author_replied = any((t["comments"]["nodes"][-1]["author"] or {}).get("login") != config.ME for t in threads)
+        if last_sha == pr["headRefOid"] and not author_replied and not requested and not pending:
             entry["signature"] = sig
             return False
         log(f"{key}: RECHECK {last_sha[:8]} → {pr['headRefOid'][:8]}, {len(threads)} open thread(s)")

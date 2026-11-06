@@ -35,7 +35,7 @@
           },
           "reply": {
             "type": "string",
-            "description": "What to post in the thread, in everyday English: one to three short sentences with the evidence (file:line or commit)."
+            "description": "What to post in the thread, in everyday English: one to three short sentences with the evidence (file:line or commit). Empty string when no reply is needed."
           }
         }
       }
