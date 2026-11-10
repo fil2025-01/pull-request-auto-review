@@ -5,6 +5,10 @@
 # "live"         — approvals are posted too.
 mode = "live"
 
+# The GitHub account reviews are requested from. Every gh call uses this account's token,
+# even when `gh auth switch` has made another account active.
+github_account = "fil2025-01"
+
 repos = [
   "geekeeasia/value-chain-v2", 
   "geekeeasia/value-chain-api-v2",
