@@ -65,7 +65,11 @@ def main() -> int:
     parser.add_argument("--force", action="store_true", help="ignore the saved state for --pr")
     opts = parser.parse_args()
 
-    config.load()
+    try:
+        config.load()
+    except Exception as exc:
+        notify("error", f"setup failed: {exc}")
+        return 1
     if PAUSE_FILE.exists():
         log("paused (PAUSE file present)")
         return 0
@@ -74,6 +78,9 @@ def main() -> int:
         return 0
     try:
         config.ME = github.my_login()
+        if CONFIG.get("github_account") and config.ME != CONFIG["github_account"]:
+            notify("error", f"gh is logged in as {config.ME}, expected {CONFIG['github_account']}")
+            return 1
         state = load_state()
         keys = [opts.pr] if opts.pr else github.candidates()
         try:
